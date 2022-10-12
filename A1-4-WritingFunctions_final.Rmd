@@ -1,0 +1,161 @@
+---
+title: "A1-4-Functions"
+output: html_document
+Name: Laila Lima Alves
+StudentID: 14344509
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+ 
+Using the diamond dataset, write a function that states the number of rows and number of columns in a data frame in a sentence.
+
+```{r}
+
+library(ggplot2) #import the library that contains the dataset
+#str(diamonds) #check the dataset before
+# Function as required
+f <- function(x){
+a <- ncol(x)
+b <- nrow(x)
+c <- c(a, b)
+return(c)
+}
+
+d <- f(diamonds)
+
+print(paste("The number of columns is",d[1], "while the number of rows is", d[2]))
+
+
+```
+# Question 2
+
+Write a function that takes a mean of every column of a dataframe made of numeric values. You may have to subset the data to the numeric columns. 
+
+```{r}
+
+data(mtcars)#The dataset has all columns with numerical values
+#str(mtcars)#check the dataset
+fm <- function(x){
+  
+  x = lapply(x, mean)#run through the data (columns and find the mean
+  return(list(x))#pop the result in a list
+}
+
+f <- fm(mtcars)#outputs are save in a list (f)
+# print the items in the list
+for (item in f) {
+    print(item)
+}
+
+
+```
+
+# Question 3
+
+Write a function that returns an n-way frequency table for each factor in the table (say with a limit of 4 factors). Make it ignore any numeric data - you may have to subset the data.
+
+```{r}
+#data() looking for a dataset
+
+library(magrittr) #This package gave us the %>% symbol for chaining R operations, but it's got other useful operators such as %<>% for mutating a data frame in place and as a placeholder for the original object being operated upon.
+library(dplyr) #The essential data-munging R package when working with data frames. Especially useful for operating on data by categories. 
+
+nwf <- function(x) {
+h <- x %>% select_if(Negate(is.numeric))
+i <- ftable(h)
+return(i);
+}
+#The function runs through the data and check for negative values, then calculates the n-way frequency
+#str(infert)
+j <- nwf(infert)
+j
+#Data chosen for the function use is infertility, as it has three factors levels (<limit of 4 factors).
+```
+
+# Question 4
+
+Write a function to do the same job that 'summary function' does for a dataframe - give descriptive statistics such as min, quantile for 25%, median, mean,  quantile for 25%, max and length and do frequency tables for each column of the dataset. The formatting should to be neat but doesn't have to be exactly the same as the summary function. 
+
+```{r}
+#Dataset iris was chosen for the exercise. The function calculates the statistical values for the different indicators individually and summary it on a list to be printed - only numerical values considered.
+x= iris
+sf <- function(x, na.omit=FALSE){
+  if (na.omit)
+    x <- x[!is.na(x)]
+  mi <- min(x)
+  q1 <- quantile(x,0.25)
+  md <- median(x)
+  ma <- mean(x)
+  q3 <- quantile(x,0.75)
+  mx <- max(x)
+  n <- length(x)
+  return(c(n=n, min=mi, qu=q1, median=md, mean=ma, qu=q3, max=mx))
+}
+
+k <- unlist(lapply(x, is.numeric));
+l <- x[ , k] ;
+l <- x[ , unlist(lapply(x, is.numeric))] 
+m = sapply(l, sf)
+m
+
+
+```
+
+# Question 5
+
+Write a function that is more useful than summary function such as min, quantile for 25%, median, mean,  quantile for 25%, max , standard deviation, skew, and kurtosis —1) do some simple ASCII plotting such as  histogram, lines and boxplot of each numeric column? 2) compare each of the columns in some way.
+
+
+```{r}
+library(moments) #include the package moments that calculates kurtosis and skeweness automatically
+
+x = trees #build in dataset 
+
+#function is similar than the one above, adding kurtosis and skewness
+sf2 <- function(x, na.omit = FALSE, grap = FALSE){
+  if(na.omit)
+    x <- x[!is.na(x)]
+  Min <- min(x)
+  q1 <- as.numeric(quantile(x, 0.25))
+  Median <- median(x)
+  m <- mean(x)
+  q3 <- as.numeric(quantile(x, 0.75))
+  Max <- max(x)
+  n <- length(x)
+  s <- sd(x)
+  kt <- kurtosis(x) 
+  sk <- skewness(x) 
+  result <- c(Min = Min, Qu_1 = q1, Median = Median, 
+              Mean = m, Qu_3 = q3,Max = Max, sd = s, skewness = sk, kurtosis = kt)
+  result <- round(result, digits = 2)#round results to two digits
+  if(grap){
+    # length & width
+    par(pin = c(3,2))
+    par(mfrow = c(1,2))
+    # Probability
+    kde <- density(x)
+    hist(x, freq = FALSE,main= deparse(substitute(x)) )
+    lines(kde, col = "red", lwd = 2)
+    boxplot(x, main=deparse(substitute(x)) )
+  }
+  return(result)#Plot histogram and boxplot of different variables
+}
+#run through the dataset and make the statistical calculations for numercial values
+n <- unlist(lapply(x, is.numeric));
+o <- x[ , n] ;
+o <- x[ , unlist(lapply(x, is.numeric))] 
+p = sapply(o, sf2)
+p
+
+#define the variables to be ploted in the graph
+sf2(trees$Girth, grap = TRUE)
+sf2(trees$Height, grap = TRUE)
+sf2(trees$Volume, grap = TRUE)
+
+```
+

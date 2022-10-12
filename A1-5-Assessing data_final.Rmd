@@ -1,0 +1,89 @@
+---
+title: "A1-5-AccessingData"
+output: html_document
+Name: Laila Lima Alves
+ID: 14344509
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question  
+
+In this exercise you will locate and access data from interesting data sources. They could be APIs to popular websites (like IMDB), packages that give you access to significant government databases (like OECD data), packages that give access to important scientific datasets (eg rOpenSci.org) or web links links to messy data that you will clean up and make available. 
+
+In this exercise please find three data such as : "iris", "USArrests", "mtcars" sources of interest to you, and download some data from the data source. Make it accessible as an R data frame, and describe the data frame. Do each in a separate R code chunk. 
+
+FIRST DATA SET 
+The Dataset will be extracted from Yahoo Finance, a website with stock prices of worldwide companies. To download the data I used the package pdfetch, due to the convenience good functionality. The Stock chosen is Richemont,a Switzerland-based luxury goods holding. The data includes daily price at open, high, low, close, adjsclose and volume. Period available is 2007 until 21.04.2022. Since the download from Web generates a 'sts' object, it is necessary to transform the format to data frame in order to plot and do further analysis. A graph shows the development of the stock price (close price) along periods.
+
+```{r}
+
+r = getOption("repos")
+r["CRAN"] = "http://cran.us.r-project.org"
+options(repos = r)
+install.packages("Rich")
+
+
+
+
+
+install.packages("pdfetch")
+
+library(pdfetch)
+
+#Download of the stock information
+Rich = pdfetch_YAHOO("CFR.SW")
+View(Rich)
+
+# Transform the xts data into a data frame
+
+library(xts)
+RCdf <- data.frame(date=index(Rich), value=coredata(Rich))
+
+#Plot a graph to see the price development over time.
+plot(RCdf$date, RCdf$value.CFR.SW.close  , type = "l", main="Price Richemond Stock", xlab="Period ", ylab="current CHF", col="blue")
+
+```
+
+
+SECOND DATA SET
+The PDfetch package provides the opportunity to download data from many different websites, include Eurostat, Fred, World Bank among others. I will use the package to download data from World Bank.
+
+The chosen data include GDP information for Africa Western and Central in USD. The Data set actually provides GDP information from many countries and regions accross the world since 1960, though I decided to include the selection for the AFW Region.
+
+The same procedure will be done as above to extract and convert the data.
+
+
+```{r}
+GDP = pdfetch_WB("NY.GDP.PCAP.CD", c("AFW","AFE"))
+View(GDP)
+
+myDF <-  data.frame(date=index(GDP), coredata(GDP))
+
+plot(myDF$date, myDF$NY.GDP.PCAP.CD.ZI, type = "l", main="GDP per capita", xlab="Period ", ylab="current US$", col="blue")
+lines(myDF$date, myDF$NY.GDP.PCAP.CD.ZH, type= "l", col="red")
+legend("topleft", legend=c("Africa Eastern and Southern", "Africa Western and Central"), col=c("red", "blue"), lty = 1:2, cex=0.8)
+
+```
+
+THIRD DATA SET
+Third attempt to download information online include Statistical Data from Eurostat. In order to use a different package, I selected the packages tidyverse and eurostat. , which will be done using a different package installed below.
+The Data set is big with 292541 inputs from 1969 until 2006 for different European countries. 
+
+
+```{r}
+
+#install.packages("tidyverse")
+library(tidyverse)
+#install.packages("eurostat")
+library(eurostat)
+clean_eurostat_cache(cache_dir = NULL, config = FALSE)
+check_access_to_data()
+k <- get_eurostat("apri_ap_hcoutm")
+view(k)
+
+
+
+```

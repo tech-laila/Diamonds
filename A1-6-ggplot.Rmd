@@ -1,0 +1,192 @@
+---
+title: "A1-6-ggplot"
+output: html_document
+Name: Laila Lima Alves
+ID: 14344509
+
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Question 1
+
+Again, `diamonds` is a dataset that contains data for the 4 'C's that determine the quality of diamonds. `cut`, `color`, `clarity` and `clarity`. It also includes the price for each of them.
+
+Using `ggplot2` you can express the relationships evident in the dataset by using appropriate commentary and visualisations. Make sure you describe the relationships you see in particular graphs in detail, and relate them back to the datasets intent. 
+
+Use a series of graphs to describe what to look for when choosing diamonds, e.g, "Bar Chart", histogram", "scatterplot", and add the geometric object- the visualization itself!. Use multiple code chunks to separate each graphing operation. Use text to explain what you are looking for in the data, and to describe your findings. There's no right answer precisely, but a response that can tell the story of the data and help us find out the important factors to note when valuing diamonds will be marked more highly than other responses. 
+install.packages("corrplot")
+install.packages("hrbrthemes")
+install.packages("QuantPsyc")
+install.packages("GGally")
+
+```{r}
+
+
+library(ggplot2)
+library(dplyr)
+library(data.table)
+library(lattice)
+library(hrbrthemes)
+library(corrplot)
+
+data(diamonds)
+
+```
+
+Correlation Matrix
+Before deciding which variables to include in the different graphs, I decided to build a correlation matrix to check which variables are more correlated in diamonds set - possible only with numerical variables.
+
+A correlation Matrix is square, though the values in diagonal represent the correlation of a variable with itself, which will result one. For this reason the diagonal is a division level results, the upper and lower parts have the same values as they mirror same relations.
+
+The highest correlations are represented with the bigger circles and include>
+carat -> price
+carat -> X (length in mm (0-10.74))
+carat -> Y (width in mm (0-58.9))
+carat -> Z (depth in mm (0-31.8))
+
+The second highest correlations are among price and X, Y, Z.
+X <-> Y <-> Z are also highly correlated as they define the main characteristics of a diamond
+
+
+
+```{r}
+
+CM <- cor(diamonds[, unlist(lapply(diamonds, is.numeric))])  
+CM	> 0.5
+corrplot(CM)
+
+
+```
+
+
+
+```{r}
+# Since not all data set is made of numerical values, below is a boxplot with the categorical variable cut compared to the price. Boxplots show many statistical values like, min, max, median, 1Q, 2Q. We can see the average price for all cut styles are close to 2500 (trace in the middle of the boxes). The Premium category has a bit more variation in price with first and second percentile stretching above other cut categories. For all Cuts there are many outliers in price (dots in upper part), which probably refer to other variables (carat, color etc.)
+
+ggplot(data=diamonds, aes(x=cut, y=price)) + 
+  geom_boxplot(aes(color = cut, linetype = cut))
+
+
+```
+
+```{R}
+
+# The Scatterplots below show the different prices and carat compared with all categorical variables. Clarity levels are on the top horizontal level. Color is on the vertical right , while cut is defined by the different colors. Despite small sizes, the graph provides the following insight: 
+#all graphs (diamonds mix) have low price and carat figures, though not all of them have high carat. Clarity levels VS1, VVS2, VVS1 and IF do not have 4 and 5 carat.
+#Diamonds with  color E, F,G and clarity I1 do not prices above 10000.
+# Ideal cut is less often in Clarity level I1, as we do not see many yellow dots.
+
+ggplot(diamonds, aes(x=carat, y=price, color=cut)) + geom_point() + facet_grid(color ~ clarity)
+
+```
+
+```{r}
+#Here is another way to view the information on data distribution using histograms. It is clear that a lot of the data about the different cut levels are concentrated in the lower part (prices below 5000), as all graphs are skewed to the right, therefore the median is influenced by it and the mean value close to 2500 for all categories. We saw in the boxplot that the mean price for the diamonds are around 2500, histograms confirm and explain the concentration.
+
+diamonds %>%
+  ggplot(aes(x=(price))) +
+  geom_histogram(stat="bin",binwidth= 500) +
+  facet_wrap(~cut, scales = "free")
+
+```
+
+
+
+```{r}
+#As seen in the correlation matrix, the numerical variables with the highest correlation are price and carat, below it is possible to see the positive correlation among them as well as the additional categorical variable 'cut', which has a mixed behavior and does not follow a pattern related to price and carat.
+
+ggplot(data= diamonds, aes(x = carat, y = price, col= cut)) +
+  geom_point()
+
+```
+
+
+```{r}
+#Below you can see histograms for ,ost numerical variables from the dataset:
+# Price -> highly skewed to the right, concentrating the data below 5000
+# Carat -> highly skewed to the right, concentrating the data below 3
+# Depth -> most of the data is concentrated between 60 and 65, though not normally distributed, because very few data otherwise available.
+# Length -> most data distributed between 4 and 8, also not normally distributed as the typical "mountain shape" not clear.
+# Width (Y) & Depth (Z) -> similarly to price and carat, data very skewed to the right. Concentration even higher in the lowest values.
+
+par(mfrow=c(3,2))
+hist(diamonds$price,main="Price")
+hist(diamonds$carat,main="Carat")
+hist(diamonds$depth,main="Depth")
+hist(diamonds$x,main="X (Length)")
+hist(diamonds$y,main="Y (Width)")
+hist(diamonds$z,main="Z (Depth)")
+
+```
+
+
+```{r}
+#Looking at the next graph we can see the log carat and log price which are positively correlated, since values increase for both and the shape of the graph looks linear (cloud of points). Different than cut, clarity colors are visually following a pattern,with the yellows on the lower part of the cloud, while the darker colors are on the top part of the cloud.
+
+par(mfrow=c(1,3))
+diamonds %>%
+  ggplot(aes(log(price),log(carat), col= clarity))+
+  geom_point()
+
+```
+
+
+```{r}
+
+#The next Bar chart show two categorical variables related to a numerical one (mean price). It is possible to see that the color of the diamond has an influence in the price, the color D represents the most expensive one. The Clarity distribution has most of the diamonds in SI2 category, while the one with less diamonds is VVS1.
+
+diamonds %>% 
+  group_by(clarity, color) %>% 
+  summarize(m = mean(price)) %>% 
+  ggplot(aes(x = clarity, y = m, group = color, fill = color)) +
+  geom_bar(stat = "identity") 
+
+
+```
+
+
+```{r}
+
+#Here another scatter plot that demonstrates the correlation between price and depth, while clarity is mixed in all levels of this correlation, the price is higher for diamonds with depth around 60-65.
+
+ggplot(data= diamonds, aes(x = depth, y = price, col= clarity)) +
+  geom_point()
+
+```
+
+
+```{r}
+#This 3D overview shows the price of diamonds depending on the length, width and depth. It seems obvious that the price increases as the variables also increase, since you get more diamonds (bigger). Though, the visual graph show some outliers that stand out from norm, they may need to be understood.
+
+
+
+library(plotly)
+
+fig <- plot_ly(x=diamonds$x, y=diamonds$y, z=diamonds$z, type="scatter3d", mode="markers", color=diamonds$price)
+fig <- fig %>% layout(title = 'Diamonds prices depending on characteristics',
+scene = list(xaxis = list(title = 'length'),
+yaxis = list(title = 'width'),
+zaxis = list(title = 'depth')))
+
+fig
+```
+
+
+```{r}
+
+fig <- plot_ly(x=diamonds$x, y=diamonds$y, z=diamonds$z, type="scatter3d", mode="markers", color=diamonds$carat)
+fig <- fig %>% layout(title = 'Diamonds carat depending on characteristics',
+scene = list(xaxis = list(title = 'length'),
+yaxis = list(title = 'width'),
+zaxis = list(title = 'depth')))
+
+fig
+
+```
+
+
+```{R}
+
